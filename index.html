@@ -75,20 +75,27 @@
       recognition.interimResults = false;
       recognition.lang = 'en-US';
 
-      recognition.onresult = (event) => {
-        const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
-        console.log("Heard:", transcript);
+     recognition.onresult = (event) => {
+  const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
+  console.log("Heard:", transcript);
 
-        // Show what was heard on screen
-        heardText.textContent = transcript;
-        heardText.classList.add("pulse");
-        setTimeout(() => heardText.classList.remove("pulse"), 400);
+  // Show what was heard on screen
+  heardText.textContent = transcript;
+  heardText.classList.add("pulse");
+  setTimeout(() => heardText.classList.remove("pulse"), 400);
 
-        // Haptic feedback
-        if (transcript.includes("sam") || transcript.includes("michael")) {
-          navigator.vibrate([200, 150, 200, 150, 200]); // 3 short pulses
-        }
-      };
+  // --- Haptic feedback rules ---
+  // If "sam" or "michael" → 3 short pulses
+  if (transcript.includes("sam") || transcript.includes("michael")) {
+    navigator.vibrate([200, 150, 200, 150, 200]);
+  }
+
+  // If "susan" or "grace" → long 2-second vibration
+  else if (transcript.includes("susan") || transcript.includes("grace")) {
+    navigator.vibrate(2000); // 2000 ms continuous vibration
+  }
+};
+
 
       recognition.onerror = (e) => {
         console.error("Recognition error:", e);
