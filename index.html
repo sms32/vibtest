@@ -2,21 +2,62 @@
 <html lang="en">
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Haptic Vibration Test</title>
+  <title>Haptic Communication Demo</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: #f4f4f4;
+      font-family: 'Poppins', sans-serif;
+    }
+    h2 {
+      margin-bottom: 24px;
+    }
+    button {
+      padding: 14px 30px;
+      margin: 10px;
+      font-size: 18px;
+      border: none;
+      border-radius: 12px;
+      background: #0078ff;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    button:hover {
+      background: #005fd4;
+      transform: scale(1.05);
+    }
+  </style>
 </head>
-<body style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;">
-  <h2>Vibration Test</h2>
-  <button id="vibrateBtn" style="padding:12px 20px;font-size:18px;">Vibrate!</button>
+<body>
+  <h2>🤝 Haptic Communication Demo</h2>
+  <button id="hiBtn">👋 Hi</button>
+  <button id="howBtn">🙂 How are you</button>
+  <button id="byeBtn">👋 Bye</button>
 
   <script>
-    const btn = document.getElementById('vibrateBtn');
-    btn.addEventListener('click', () => {
+    function vibratePattern(pattern) {
       if ("vibrate" in navigator) {
-        // Vibrate pattern: wait 0ms, vibrate 200ms, pause 100ms, vibrate 400ms
-        navigator.vibrate([0, 200, 100, 400]);
+        navigator.vibrate(pattern);
       } else {
         alert("Vibration not supported on this device/browser.");
       }
+    }
+
+    document.getElementById('hiBtn').addEventListener('click', () => {
+      vibratePattern([0, 150, 80, 150]); // Hi
+    });
+
+    document.getElementById('howBtn').addEventListener('click', () => {
+      vibratePattern([0, 100, 50, 200, 50, 300]); // How are you
+    });
+
+    document.getElementById('byeBtn').addEventListener('click', () => {
+      vibratePattern([0, 300, 100, 100]); // Bye
     });
   </script>
 </body>
