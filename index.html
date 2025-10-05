@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Haptic Communication Demo</title>
+  <title>Voice Haptic Demo</title>
   <style>
     body {
       display: flex;
@@ -10,18 +10,18 @@
       align-items: center;
       justify-content: center;
       height: 100vh;
-      background: #f4f4f4;
+      background: #fafafa;
       font-family: 'Poppins', sans-serif;
+      text-align: center;
     }
-    h2 { margin-bottom: 24px; }
+    h2 { margin-bottom: 20px; }
     button {
-      padding: 14px 30px;
-      margin: 10px;
+      padding: 14px 28px;
       font-size: 18px;
       border: none;
-      border-radius: 12px;
+      border-radius: 10px;
       background: #0078ff;
-      color: white;
+      color: #fff;
       cursor: pointer;
       transition: 0.2s;
     }
@@ -29,33 +29,62 @@
       background: #005fd4;
       transform: scale(1.05);
     }
+    #status {
+      margin-top: 16px;
+      font-size: 16px;
+      color: #333;
+    }
   </style>
 </head>
 <body>
-  <h2>🤝 Haptic Communication Demo</h2>
-  <button id="hiBtn">👋 Hi</button>
-  <button id="howBtn">🙂 How are you</button>
-  <button id="byeBtn">👋 Bye</button>
+  <h2>🎙️ Voice Haptic Demo</h2>
+  <button id="startBtn">Start Listening</button>
+  <div id="status">Press the button and say “Hi”</div>
 
   <script>
-    function vibratePattern(pattern) {
-      if ("vibrate" in navigator) {
-        navigator.vibrate(pattern);
-      } else {
-        alert("Vibration not supported on this device/browser.");
-      }
+    const startBtn = document.getElementById('startBtn');
+    const status = document.getElementById('status');
+
+    // Check browser support
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      status.innerText = "❌ Speech recognition not supported on this browser.";
+    } else {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
+        console.log("Heard:", transcript);
+        status.innerText = `Heard: ${transcript}`;
+
+        // Check for "hi"
+        if (transcript.includes("hi") || transcript.includes("hello")) {
+          console.log("Vibrating for 'hi'");
+          navigator.vibrate([200, 150, 200, 150, 200]); // 3 short pulses with pause
+        }
+      };
+
+      recognition.onerror = (e) => {
+        console.error(e);
+        status.innerText = "⚠️ Error: " + e.error;
+      };
+
+      recognition.onend = () => {
+        status.innerText = "Listening stopped. Tap Start again to continue.";
+      };
+
+      startBtn.addEventListener('click', () => {
+        try {
+          recognition.start();
+          status.innerText = "🎤 Listening... Say 'Hi'";
+        } catch (err) {
+          console.log("Recognition already started or error:", err);
+        }
+      });
     }
-
-    // exaggerated patterns
-    const patterns = {
-      hi: [0, 200, 150, 200],                // two medium pulses
-      how: [0, 150, 100, 300, 150, 400],     // short → long → longer rhythm
-      bye: [0, 500, 200, 200],               // one long, one short
-    };
-
-    document.getElementById('hiBtn').addEventListener('click', () => vibratePattern(patterns.hi));
-    document.getElementById('howBtn').addEventListener('click', () => vibratePattern(patterns.how));
-    document.getElementById('byeBtn').addEventListener('click', () => vibratePattern(patterns.bye));
   </script>
 </body>
 </html>
