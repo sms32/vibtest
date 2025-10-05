@@ -13,9 +13,7 @@
       background: #f4f4f4;
       font-family: 'Poppins', sans-serif;
     }
-    h2 {
-      margin-bottom: 24px;
-    }
+    h2 { margin-bottom: 24px; }
     button {
       padding: 14px 30px;
       margin: 10px;
@@ -48,17 +46,16 @@
       }
     }
 
-    document.getElementById('hiBtn').addEventListener('click', () => {
-      vibratePattern([0, 150, 80, 150]); // Hi
-    });
+    // exaggerated patterns
+    const patterns = {
+      hi: [0, 200, 150, 200],                // two medium pulses
+      how: [0, 150, 100, 300, 150, 400],     // short → long → longer rhythm
+      bye: [0, 500, 200, 200],               // one long, one short
+    };
 
-    document.getElementById('howBtn').addEventListener('click', () => {
-      vibratePattern([0, 100, 50, 200, 50, 300]); // How are you
-    });
-
-    document.getElementById('byeBtn').addEventListener('click', () => {
-      vibratePattern([0, 300, 100, 100]); // Bye
-    });
+    document.getElementById('hiBtn').addEventListener('click', () => vibratePattern(patterns.hi));
+    document.getElementById('howBtn').addEventListener('click', () => vibratePattern(patterns.how));
+    document.getElementById('byeBtn').addEventListener('click', () => vibratePattern(patterns.bye));
   </script>
 </body>
 </html>
