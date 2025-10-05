@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Voice Haptic Demo</title>
+  <title>Voice to Haptic Demo</title>
   <style>
     body {
       display: flex;
@@ -14,7 +14,9 @@
       font-family: 'Poppins', sans-serif;
       text-align: center;
     }
-    h2 { margin-bottom: 20px; }
+    h2 {
+      margin-bottom: 20px;
+    }
     button {
       padding: 14px 28px;
       font-size: 18px;
@@ -30,25 +32,43 @@
       transform: scale(1.05);
     }
     #status {
-      margin-top: 16px;
-      font-size: 16px;
+      margin-top: 20px;
+      font-size: 18px;
       color: #333;
+      min-height: 28px;
+    }
+    #heardText {
+      margin-top: 10px;
+      font-size: 24px;
+      font-weight: 600;
+      color: #0078ff;
+      min-height: 40px;
+    }
+    .pulse {
+      animation: pulse 0.4s ease-in-out;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
     }
   </style>
 </head>
 <body>
-  <h2>🎙️ Voice Haptic Demo</h2>
+  <h2>🎙️ Voice → Haptic Demo</h2>
   <button id="startBtn">Start Listening</button>
-  <div id="status">Press the button and say “Hi”</div>
+  <div id="status">Press the button and say something...</div>
+  <div id="heardText"></div>
 
   <script>
     const startBtn = document.getElementById('startBtn');
     const status = document.getElementById('status');
+    const heardText = document.getElementById('heardText');
 
-    // Check browser support
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
     if (!SpeechRecognition) {
-      status.innerText = "❌ Speech recognition not supported on this browser.";
+      status.innerText = "❌ Speech recognition not supported in this browser.";
     } else {
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
@@ -58,22 +78,25 @@
       recognition.onresult = (event) => {
         const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
         console.log("Heard:", transcript);
-        status.innerText = `Heard: ${transcript}`;
 
-        // Check for "hi"
+        // Show what was heard on screen
+        heardText.textContent = transcript;
+        heardText.classList.add("pulse");
+        setTimeout(() => heardText.classList.remove("pulse"), 400);
+
+        // Haptic feedback
         if (transcript.includes("hi") || transcript.includes("hello")) {
-          console.log("Vibrating for 'hi'");
-          navigator.vibrate([200, 150, 200, 150, 200]); // 3 short pulses with pause
+          navigator.vibrate([200, 150, 200, 150, 200]); // 3 short pulses
         }
       };
 
       recognition.onerror = (e) => {
-        console.error(e);
+        console.error("Recognition error:", e);
         status.innerText = "⚠️ Error: " + e.error;
       };
 
       recognition.onend = () => {
-        status.innerText = "Listening stopped. Tap Start again to continue.";
+        status.innerText = "Listening stopped. Tap Start to resume.";
       };
 
       startBtn.addEventListener('click', () => {
