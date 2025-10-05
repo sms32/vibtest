@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Haptic Vibration Test</title>
+</head>
+<body style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;">
+  <h2>Vibration Test</h2>
+  <button id="vibrateBtn" style="padding:12px 20px;font-size:18px;">Vibrate!</button>
+
+  <script>
+    const btn = document.getElementById('vibrateBtn');
+    btn.addEventListener('click', () => {
+      if ("vibrate" in navigator) {
+        // Vibrate pattern: wait 0ms, vibrate 200ms, pause 100ms, vibrate 400ms
+        navigator.vibrate([0, 200, 100, 400]);
+      } else {
+        alert("Vibration not supported on this device/browser.");
+      }
+    });
+  </script>
+</body>
+</html>
