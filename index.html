@@ -1,120 +1,182 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Voice to Haptic Demo</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Voice ↔ Haptic Sentence Demo</title>
   <style>
     body {
+      font-family: 'Poppins', sans-serif;
+      background: #f2f6fc;
+      margin: 0;
+      padding: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
-      background: #fafafa;
-      font-family: 'Poppins', sans-serif;
+      gap: 40px;
+    }
+
+    .section {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+      padding: 25px 40px;
       text-align: center;
+      width: 85%;
+      max-width: 500px;
     }
+
     h2 {
-      margin-bottom: 20px;
+      margin: 0;
+      font-size: 22px;
+      color: #0078ff;
     }
+
     button {
       padding: 14px 28px;
       font-size: 18px;
       border: none;
       border-radius: 10px;
       background: #0078ff;
-      color: #fff;
+      color: white;
       cursor: pointer;
       transition: 0.2s;
     }
+
     button:hover {
       background: #005fd4;
       transform: scale(1.05);
     }
-    #status {
-      margin-top: 20px;
+
+    .status, .output {
+      margin-top: 15px;
       font-size: 18px;
       color: #333;
       min-height: 28px;
     }
-    #heardText {
-      margin-top: 10px;
-      font-size: 24px;
-      font-weight: 600;
+
+    .output {
       color: #0078ff;
-      min-height: 40px;
+      font-weight: 600;
     }
+
     .pulse {
       animation: pulse 0.4s ease-in-out;
     }
+
     @keyframes pulse {
       0% { transform: scale(1); }
-      50% { transform: scale(1.2); }
+      50% { transform: scale(1.15); }
       100% { transform: scale(1); }
     }
   </style>
 </head>
 <body>
-  <h2>🎙️ Voice → Haptic Demo</h2>
-  <button id="startBtn">Start Listening</button>
-  <div id="status">Press the button and say something...</div>
-  <div id="heardText"></div>
+
+  <!-- USER A SECTION -->
+  <div class="section">
+    <h2>👤 User A (Normal)</h2>
+    <button id="startVoiceBtn">🎙 Speak</button>
+    <div id="voiceStatus" class="status">Press to start speaking</div>
+    <div id="spokenText" class="output"></div>
+  </div>
+
+  <!-- USER B SECTION -->
+  <div class="section">
+    <h2>🖐 User B (Deafblind)</h2>
+    <button id="tapBtn">Tap to Reply</button>
+    <div id="tapStatus" class="status">Tap 2 times for “I'm good” or 3 for “How are you?”</div>
+    <div id="replyText" class="output"></div>
+  </div>
 
   <script>
-    const startBtn = document.getElementById('startBtn');
-    const status = document.getElementById('status');
-    const heardText = document.getElementById('heardText');
-
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const startVoiceBtn = document.getElementById("startVoiceBtn");
+    const voiceStatus = document.getElementById("voiceStatus");
+    const spokenText = document.getElementById("spokenText");
+    const tapBtn = document.getElementById("tapBtn");
+    const tapStatus = document.getElementById("tapStatus");
+    const replyText = document.getElementById("replyText");
 
+    // ===============================
+    // USER A: VOICE → VIBRATION PATTERN
+    // ===============================
     if (!SpeechRecognition) {
-      status.innerText = "❌ Speech recognition not supported in this browser.";
+      voiceStatus.innerText = "❌ Speech recognition not supported.";
     } else {
       const recognition = new SpeechRecognition();
-      recognition.continuous = true;
+      recognition.continuous = false;
       recognition.interimResults = false;
-      recognition.lang = 'en-US';
+      recognition.lang = "en-US";
 
-     recognition.onresult = (event) => {
-  const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
-  console.log("Heard:", transcript);
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript.toLowerCase().trim();
+        spokenText.textContent = transcript;
+        spokenText.classList.add("pulse");
+        setTimeout(() => spokenText.classList.remove("pulse"), 400);
 
-  // Show what was heard on screen
-  heardText.textContent = transcript;
-  heardText.classList.add("pulse");
-  setTimeout(() => heardText.classList.remove("pulse"), 400);
-
-  // --- Haptic feedback rules ---
-  // If "sam" or "michael" → 3 short pulses
-  if (transcript.includes("sam") || transcript.includes("michael")) {
-    navigator.vibrate([200, 150, 200, 150, 200]);
-  }
-
-  // If "susan" or "grace" → long 2-second vibration
-  else if (transcript.includes("susan") || transcript.includes("grace")) {
-    navigator.vibrate(2000); // 2000 ms continuous vibration
-  }
-};
-
+        // Check for known phrases
+        if (transcript.includes("hi") && transcript.includes("how are you")) {
+          // 1 short vibration + break + 2 short vibrations
+          navigator.vibrate([300, 200, 200, 150, 200]);
+          voiceStatus.innerText = "🟢 Sent 'Hi, how are you?' as haptic pattern";
+        } else if (transcript.includes("good") || transcript.includes("fine")) {
+          navigator.vibrate([200, 150, 300]);
+          voiceStatus.innerText = "🟢 Sent 'I'm good' as haptic pattern";
+        } else {
+          navigator.vibrate([400]);
+          voiceStatus.innerText = "🟢 Sent generic message vibration";
+        }
+      };
 
       recognition.onerror = (e) => {
-        console.error("Recognition error:", e);
-        status.innerText = "⚠️ Error: " + e.error;
+        voiceStatus.innerText = "⚠ Error: " + e.error;
       };
 
       recognition.onend = () => {
-        status.innerText = "Listening stopped. Tap Start to resume.";
+        voiceStatus.innerText = "Tap Speak to start again";
       };
 
-      startBtn.addEventListener('click', () => {
+      startVoiceBtn.addEventListener("click", () => {
         try {
           recognition.start();
-          status.innerText = "🎤 Listening... Say 'Hi'";
+          voiceStatus.innerText = "🎤 Listening...";
         } catch (err) {
-          console.log("Recognition already started or error:", err);
+          console.log("Error:", err);
         }
       });
     }
+
+    // ======================================
+    // USER B: TAP PATTERN → SENTENCE RESPONSE
+    // ======================================
+    let tapCount = 0;
+    let tapTimeout = null;
+
+    tapBtn.addEventListener("click", () => {
+      tapCount++;
+      navigator.vibrate(100); // small feedback for each tap
+
+      clearTimeout(tapTimeout);
+      tapTimeout = setTimeout(() => {
+        let message = "";
+        if (tapCount === 2) {
+          message = "I'm good.";
+          navigator.vibrate([200, 150, 300]); // simulate haptic send
+        } else if (tapCount === 3) {
+          message = "How are you?";
+          navigator.vibrate([150, 100, 150, 100, 150]); // triple pulse
+        } else {
+          message = "Unknown tap pattern.";
+        }
+
+        replyText.textContent = message;
+        tapStatus.textContent = `You tapped ${tapCount} time(s).`;
+        tapCount = 0;
+      }, 900);
+    });
   </script>
 </body>
 </html>
