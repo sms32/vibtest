@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Voice ↔ Haptic Sentence Demo</title>
+  <title>Voice ↔ Haptic ↔ Speech Demo</title>
   <style>
     body {
       font-family: 'Poppins', sans-serif;
@@ -100,9 +100,7 @@
     const tapStatus = document.getElementById("tapStatus");
     const replyText = document.getElementById("replyText");
 
-    // ===============================
-    // USER A: VOICE → VIBRATION PATTERN
-    // ===============================
+    // === USER A: VOICE → VIBRATION PATTERN ===
     if (!SpeechRecognition) {
       voiceStatus.innerText = "❌ Speech recognition not supported.";
     } else {
@@ -117,9 +115,7 @@
         spokenText.classList.add("pulse");
         setTimeout(() => spokenText.classList.remove("pulse"), 400);
 
-        // Check for known phrases
         if (transcript.includes("hi") && transcript.includes("how are you")) {
-          // 1 short vibration + break + 2 short vibrations
           navigator.vibrate([300, 200, 200, 150, 200]);
           voiceStatus.innerText = "🟢 Sent 'Hi, how are you?' as haptic pattern";
         } else if (transcript.includes("good") || transcript.includes("fine")) {
@@ -149,34 +145,49 @@
       });
     }
 
-    // ======================================
-    // USER B: TAP PATTERN → SENTENCE RESPONSE
-    // ======================================
+    // === USER B: TAP PATTERN → SPEECH OUTPUT ===
     let tapCount = 0;
     let tapTimeout = null;
 
     tapBtn.addEventListener("click", () => {
       tapCount++;
-      navigator.vibrate(100); // small feedback for each tap
+      navigator.vibrate(100);
 
       clearTimeout(tapTimeout);
       tapTimeout = setTimeout(() => {
         let message = "";
         if (tapCount === 2) {
           message = "I'm good.";
-          navigator.vibrate([200, 150, 300]); // simulate haptic send
+          navigator.vibrate([200, 150, 300]);
         } else if (tapCount === 3) {
           message = "How are you?";
-          navigator.vibrate([150, 100, 150, 100, 150]); // triple pulse
+          navigator.vibrate([150, 100, 150, 100, 150]);
         } else {
           message = "Unknown tap pattern.";
         }
 
         replyText.textContent = message;
         tapStatus.textContent = `You tapped ${tapCount} time(s).`;
+
+        // Speak out loud for User A
+        speakMessage(message);
+
         tapCount = 0;
       }, 900);
     });
+
+    // === SPEECH SYNTHESIS FUNCTION ===
+    function speakMessage(text) {
+      if ('speechSynthesis' in window) {
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = 'en-US';
+        utter.rate = 1;
+        utter.pitch = 1;
+        speechSynthesis.speak(utter);
+      } else {
+        console.log("Speech synthesis not supported.");
+      }
+    }
   </script>
 </body>
 </html>
