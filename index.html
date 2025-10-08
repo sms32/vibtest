@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Voice ↔ Haptic ↔ Speech Demo</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dual User Voice ↔ Haptic Communication</title>
   <style>
     body {
       font-family: 'Poppins', sans-serif;
@@ -11,55 +11,63 @@
       margin: 0;
       padding: 0;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
-      gap: 40px;
     }
 
-    .section {
+    .container {
+      width: 90%;
+      max-width: 480px;
       background: #fff;
       border-radius: 20px;
       box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-      padding: 25px 40px;
+      padding: 30px;
       text-align: center;
-      width: 85%;
-      max-width: 500px;
     }
 
     h2 {
-      margin: 0;
-      font-size: 22px;
       color: #0078ff;
+      margin-bottom: 15px;
+    }
+
+    button, input {
+      font-family: 'Poppins', sans-serif;
+      border: none;
+      border-radius: 10px;
+      padding: 14px 20px;
+      font-size: 16px;
+      margin: 8px 0;
+      width: 100%;
     }
 
     button {
-      padding: 14px 28px;
-      font-size: 18px;
-      border: none;
-      border-radius: 10px;
       background: #0078ff;
-      color: white;
+      color: #fff;
       cursor: pointer;
       transition: 0.2s;
     }
 
     button:hover {
       background: #005fd4;
-      transform: scale(1.05);
     }
 
-    .status, .output {
-      margin-top: 15px;
-      font-size: 18px;
-      color: #333;
-      min-height: 28px;
+    .hidden {
+      display: none;
     }
 
     .output {
+      margin-top: 15px;
       color: #0078ff;
       font-weight: 600;
+      font-size: 18px;
+      min-height: 30px;
+    }
+
+    .status {
+      font-size: 16px;
+      color: #333;
+      margin-top: 10px;
     }
 
     .pulse {
@@ -75,77 +83,109 @@
 </head>
 <body>
 
-  <!-- USER A SECTION -->
-  <div class="section">
-    <h2>👤 User A (Normal)</h2>
-    <button id="startVoiceBtn">🎙 Speak</button>
-    <div id="voiceStatus" class="status">Press to start speaking</div>
-    <div id="spokenText" class="output"></div>
-  </div>
+  <div class="container">
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen">
+      <h2>Login as</h2>
+      <button onclick="loginAs('A')">👤 Type A (Normal)</button>
+      <button onclick="loginAs('B')">🖐 Type B (Deafblind)</button>
+    </div>
 
-  <!-- USER B SECTION -->
-  <div class="section">
-    <h2>🖐 User B (Deafblind)</h2>
-    <button id="tapBtn">Tap to Reply</button>
-    <div id="tapStatus" class="status">Tap 2 times for “I'm good” or 3 for “How are you?”</div>
-    <div id="replyText" class="output"></div>
+    <!-- TYPE A INTERFACE -->
+    <div id="typeA" class="hidden">
+      <h2>👤 User A Panel</h2>
+      <button id="speakBtn">🎙 Speak Message</button>
+      <div>or type below</div>
+      <input type="text" id="typedMessage" placeholder="Type your message here..." />
+      <button id="sendTypedBtn">Send Message</button>
+      <div id="aStatus" class="status">Waiting for input...</div>
+      <div id="aOutput" class="output"></div>
+      <button onclick="logout()">↩ Logout</button>
+    </div>
+
+    <!-- TYPE B INTERFACE -->
+    <div id="typeB" class="hidden">
+      <h2>🖐 User B Panel</h2>
+      <button id="tapBtn">Tap to Reply</button>
+      <div id="bStatus" class="status">Tap 2 times for “I'm good” or 3 for “How are you?”</div>
+      <div id="bOutput" class="output"></div>
+      <button onclick="logout()">↩ Logout</button>
+    </div>
   </div>
 
   <script>
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const startVoiceBtn = document.getElementById("startVoiceBtn");
-    const voiceStatus = document.getElementById("voiceStatus");
-    const spokenText = document.getElementById("spokenText");
-    const tapBtn = document.getElementById("tapBtn");
-    const tapStatus = document.getElementById("tapStatus");
-    const replyText = document.getElementById("replyText");
-
-    // === USER A: VOICE → VIBRATION PATTERN ===
-    if (!SpeechRecognition) {
-      voiceStatus.innerText = "❌ Speech recognition not supported.";
-    } else {
-      const recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = "en-US";
-
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript.toLowerCase().trim();
-        spokenText.textContent = transcript;
-        spokenText.classList.add("pulse");
-        setTimeout(() => spokenText.classList.remove("pulse"), 400);
-
-        if (transcript.includes("hi") && transcript.includes("how are you")) {
-          navigator.vibrate([300, 200, 200, 150, 200]);
-          voiceStatus.innerText = "🟢 Sent 'Hi, how are you?' as haptic pattern";
-        } else if (transcript.includes("good") || transcript.includes("fine")) {
-          navigator.vibrate([200, 150, 300]);
-          voiceStatus.innerText = "🟢 Sent 'I'm good' as haptic pattern";
-        } else {
-          navigator.vibrate([400]);
-          voiceStatus.innerText = "🟢 Sent generic message vibration";
-        }
-      };
-
-      recognition.onerror = (e) => {
-        voiceStatus.innerText = "⚠ Error: " + e.error;
-      };
-
-      recognition.onend = () => {
-        voiceStatus.innerText = "Tap Speak to start again";
-      };
-
-      startVoiceBtn.addEventListener("click", () => {
-        try {
-          recognition.start();
-          voiceStatus.innerText = "🎤 Listening...";
-        } catch (err) {
-          console.log("Error:", err);
-        }
-      });
+    // ====== LOGIN HANDLING ======
+    function loginAs(type) {
+      document.getElementById("loginScreen").classList.add("hidden");
+      if (type === "A") document.getElementById("typeA").classList.remove("hidden");
+      else document.getElementById("typeB").classList.remove("hidden");
     }
 
-    // === USER B: TAP PATTERN → SPEECH OUTPUT ===
+    function logout() {
+      document.getElementById("typeA").classList.add("hidden");
+      document.getElementById("typeB").classList.add("hidden");
+      document.getElementById("loginScreen").classList.remove("hidden");
+    }
+
+    // ====== USER A FUNCTIONALITY ======
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const speakBtn = document.getElementById("speakBtn");
+    const sendTypedBtn = document.getElementById("sendTypedBtn");
+    const typedMessage = document.getElementById("typedMessage");
+    const aStatus = document.getElementById("aStatus");
+    const aOutput = document.getElementById("aOutput");
+
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.lang = "en-US";
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onresult = (e) => {
+        const text = e.results[0][0].transcript.toLowerCase().trim();
+        processMessageA(text);
+      };
+
+      speakBtn.addEventListener("click", () => {
+        recognition.start();
+        aStatus.textContent = "🎤 Listening...";
+      });
+
+      recognition.onend = () => {
+        aStatus.textContent = "Ready for next input";
+      };
+    } else {
+      aStatus.textContent = "❌ Speech recognition not supported.";
+    }
+
+    sendTypedBtn.addEventListener("click", () => {
+      const text = typedMessage.value.trim().toLowerCase();
+      if (text) processMessageA(text);
+      typedMessage.value = "";
+    });
+
+    function processMessageA(text) {
+      aOutput.textContent = text;
+      aOutput.classList.add("pulse");
+      setTimeout(() => aOutput.classList.remove("pulse"), 400);
+
+      if (text.includes("hi") && text.includes("how are you")) {
+        navigator.vibrate([300, 200, 200, 150, 200]);
+        aStatus.textContent = "🟢 Sent 'Hi, how are you?' vibration";
+      } else if (text.includes("good") || text.includes("fine")) {
+        navigator.vibrate([200, 150, 300]);
+        aStatus.textContent = "🟢 Sent 'I'm good' vibration";
+      } else {
+        navigator.vibrate([400]);
+        aStatus.textContent = "🟢 Sent generic vibration";
+      }
+    }
+
+    // ====== USER B FUNCTIONALITY ======
+    const tapBtn = document.getElementById("tapBtn");
+    const bStatus = document.getElementById("bStatus");
+    const bOutput = document.getElementById("bOutput");
+
     let tapCount = 0;
     let tapTimeout = null;
 
@@ -166,28 +206,25 @@
           message = "Unknown tap pattern.";
         }
 
-        replyText.textContent = message;
-        tapStatus.textContent = `You tapped ${tapCount} time(s).`;
+        bOutput.textContent = message;
+        bStatus.textContent = `You tapped ${tapCount} time(s).`;
 
-        // Speak out loud for User A
-        speakMessage(message);
-
+        speakMessage(message); // voice output for A to hear
         tapCount = 0;
       }, 900);
     });
 
-    // === SPEECH SYNTHESIS FUNCTION ===
+    // ====== SPEECH SYNTHESIS ======
     function speakMessage(text) {
-      if ('speechSynthesis' in window) {
+      if ("speechSynthesis" in window) {
         const utter = new SpeechSynthesisUtterance(text);
-        utter.lang = 'en-US';
+        utter.lang = "en-US";
         utter.rate = 1;
         utter.pitch = 1;
         speechSynthesis.speak(utter);
-      } else {
-        console.log("Speech synthesis not supported.");
       }
     }
   </script>
+
 </body>
 </html>
